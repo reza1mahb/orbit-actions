@@ -4,12 +4,12 @@ pragma solidity 0.8.16;
 import '@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 
-import 'nitro-contracts/src/bridge/IBridge.sol';
-import 'nitro-contracts/src/bridge/IInbox.sol';
-import 'nitro-contracts/src/bridge/IOutbox.sol';
-import 'nitro-contracts/src/bridge/ISequencerInbox.sol';
-import 'nitro-contracts/src/rollup/IRollupAdmin.sol';
-import 'nitro-contracts/src/rollup/IRollupLogic.sol';
+import '@arbitrum/nitro-contracts-1.2.1/src/bridge/IBridge.sol';
+import '@arbitrum/nitro-contracts-1.2.1/src/bridge/IInbox.sol';
+import '@arbitrum/nitro-contracts-1.2.1/src/bridge/IOutbox.sol';
+import '@arbitrum/nitro-contracts-1.2.1/src/bridge/ISequencerInbox.sol';
+import '@arbitrum/nitro-contracts-1.2.1/src/rollup/IRollupAdmin.sol';
+import '@arbitrum/nitro-contracts-1.2.1/src/rollup/IRollupLogic.sol';
 
 interface ISeqInboxPostUpgradeInit {
   function postUpgradeInit() external;
@@ -20,7 +20,7 @@ interface IChallengeManagerUpgradeInit {
   function osp() external returns (address);
 }
 
-/// @notice Upgrades an Arbitrum orbit chain to nitro-contract 1.2.1 from 1.1.0 or 1.1.1
+/// @notice Upgrades an Arbitrum orbit chain to celestia-da 1.2.1 from 1.1.0 or 1.1.1
 /// @dev    Does NOT support versions besides 1.1.0 or 1.1.1, inclduing their beta versions
 ///         Modified from
 ///         https://github.com/ArbitrumFoundation/governance/blob/a5375eea133e1b88df2116ed510ab2e3c07293d3/src/gov-action-contracts/AIPs/ArbOS20/ArbOS20Action.sol
