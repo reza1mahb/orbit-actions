@@ -7,3 +7,4 @@
 [submodule "lib/nitro-contracts"]
 	path = lib/nitro-contracts
 	url = https://github.com/celestiaorg/nitro-contracts
+	branch = contracts-v1.2.1
