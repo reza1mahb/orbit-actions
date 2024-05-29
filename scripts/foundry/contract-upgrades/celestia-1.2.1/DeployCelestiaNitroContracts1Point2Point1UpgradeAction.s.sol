@@ -3,17 +3,19 @@ pragma solidity 0.8.16;
 
 import 'forge-std/Script.sol';
 import { IReader4844 } from '@arbitrum/nitro-contracts-1.2.1/src/libraries/IReader4844.sol';
-import { NitroContracts1Point2Point1UpgradeAction } from '../../../../contracts/parent-chain/contract-upgrades/CelestiaNitroContracts1Point2Point1UpgradeAction.sol';
+import { CelestiaNitroContracts1Point2Point1UpgradeAction } from '../../../../contracts/parent-chain/contract-upgrades/CelestiaNitroContracts1Point2Point1UpgradeAction.sol';
 
 import { ArbitrumChecker } from '@arbitrum/nitro-contracts-1.2.1/src/libraries/ArbitrumChecker.sol';
 import { MockArbSys } from '../../helper/MockArbSys.sol';
 
 /**
- * @title DeployNitroContracts1Point2Point1UpgradeActionScript
- * @notice This script deploys OSPs and ChallengeManager templates, blob reader and SequencerInbox template.
+ * @title DeployCelestiaNitroContracts1Point2Point1UpgradeActionScript
+ * @notice This script deploys OSPs and ChallengeManager templates, and SequencerInbox template.
  *          Not applicable for Arbitrum based chains due to precompile call in SequencerInbox (Foundry simulation breaks).
  */
-contract DeployNitroContracts1Point2Point1UpgradeActionScript is Script {
+contract DeployCelestiaNitroContracts1Point2Point1UpgradeActionScript is
+  Script
+{
   function run() public {
     bool isArbitrum = vm.envBool('PARENT_CHAIN_IS_ARBITRUM');
     if (isArbitrum) {
@@ -70,7 +72,7 @@ contract DeployNitroContracts1Point2Point1UpgradeActionScript is Script {
       );
 
       // finally deploy upgrade action
-      new NitroContracts1Point2Point1UpgradeAction({
+      new CelestiaNitroContracts1Point2Point1UpgradeAction({
         _newWasmModuleRoot: vm.envBytes32('WASM_MODULE_ROOT'),
         _newSequencerInboxImpl: seqInbox2,
         _newChallengeMangerImpl: challengeManager,
@@ -89,7 +91,7 @@ contract DeployNitroContracts1Point2Point1UpgradeActionScript is Script {
     );
 
     // finally deploy upgrade action
-    new NitroContracts1Point2Point1UpgradeAction({
+    new CelestiaNitroContracts1Point2Point1UpgradeAction({
       _newWasmModuleRoot: vm.envBytes32('WASM_MODULE_ROOT'),
       _newSequencerInboxImpl: seqInbox,
       _newChallengeMangerImpl: challengeManager,
