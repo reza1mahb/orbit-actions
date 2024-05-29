@@ -2,11 +2,18 @@
 pragma solidity 0.8.16;
 
 import 'forge-std/Script.sol';
-import { IReader4844 } from '@arbitrum/nitro-contracts-1.2.1/src/libraries/IReader4844.sol';
+import { IReader4844 } from 'lib/nitro-contracts/src/libraries/IReader4844.sol';
 import { CelestiaNitroContracts1Point2Point1UpgradeAction } from '../../../../contracts/parent-chain/contract-upgrades/CelestiaNitroContracts1Point2Point1UpgradeAction.sol';
 
-import { ArbitrumChecker } from '@arbitrum/nitro-contracts-1.2.1/src/libraries/ArbitrumChecker.sol';
-import { MockArbSys } from '../../helper/MockArbSys.sol';
+import { ArbitrumChecker } from 'lib/nitro-contracts/src/libraries/ArbitrumChecker.sol';
+
+import { OneStepProver0 } from 'lib/nitro-contracts/src/osp/OneStepProver0.sol';
+import { OneStepProverMemory } from 'lib/nitro-contracts/src/osp/OneStepProverMemory.sol';
+import { OneStepProverMath } from 'lib/nitro-contracts/src/osp/OneStepProverMath.sol';
+import { OneStepProverHostIo } from 'lib/nitro-contracts/src/osp/OneStepProverHostIo.sol';
+import { OneStepProofEntry } from 'lib/nitro-contracts/src/osp/OneStepProofEntry.sol';
+import { ChallengeManager } from 'lib/nitro-contracts/src/challenge/ChallengeManager.sol';
+import { SequencerInbox } from 'lib/nitro-contracts/src/bridge/SequencerInbox.sol';
 
 /**
  * @title DeployCelestiaNitroContracts1Point2Point1UpgradeActionScript
@@ -17,54 +24,27 @@ contract DeployCelestiaNitroContracts1Point2Point1UpgradeActionScript is
   Script
 {
   function run() public {
-    bool isArbitrum = vm.envBool('PARENT_CHAIN_IS_ARBITRUM');
-    if (isArbitrum) {
-      // etch a mock ArbSys contract so that foundry simulate it nicely
-      bytes memory mockArbSysCode = address(new MockArbSys()).code;
-      vm.etch(address(100), mockArbSysCode);
-    }
-
     vm.startBroadcast();
 
     // deploy OSP templates
-    address osp0 = _deployBytecodeFromJSON(
-      '/node_modules/@arbitrum/nitro-contracts-1.2.1/build/contracts/src/osp/OneStepProver0.sol/OneStepProver0.json'
-    );
-    address ospMemory = _deployBytecodeFromJSON(
-      '/node_modules/@arbitrum/nitro-contracts-1.2.1/build/contracts/src/osp/OneStepProverMemory.sol/OneStepProverMemory.json'
-    );
-    address ospMath = _deployBytecodeFromJSON(
-      '/node_modules/@arbitrum/nitro-contracts-1.2.1/build/contracts/src/osp/OneStepProverMath.sol/OneStepProverMath.json'
-    );
-    address ospHostIo = _deployBytecodeFromJSON(
-      '/node_modules/@arbitrum/nitro-contracts-1.2.1/build/contracts/src/osp/OneStepProverHostIo.sol/OneStepProverHostIo.json'
-    );
-    address osp = _deployBytecodeWithConstructorFromJSON(
-      '/node_modules/@arbitrum/nitro-contracts-1.2.1/build/contracts/src/osp/OneStepProofEntry.sol/OneStepProofEntry.json',
-      abi.encode(osp0, ospMemory, ospMath, ospHostIo)
+    address osp0 = address(new OneStepProver0());
+    address ospMemory = address(new OneStepProverMemory());
+    address ospMath = address(new OneStepProverMath());
+    address ospHostIo = address(new OneStepProverHostIo());
+    address osp = address(
+      new OneStepProofEntry(osp0, ospMemory, ospMath, ospHostIo)
     );
 
     // deploy new challenge manager templates
-    address challengeManager = _deployBytecodeFromJSON(
-      '/node_modules/@arbitrum/nitro-contracts-1.2.1/build/contracts/src/challenge/ChallengeManager.sol/ChallengeManager.json'
-    );
-
-    address reader4844Address;
-    if (!isArbitrum) {
-      // deploy blob reader
-      reader4844Address = _deployBytecodeFromJSON(
-        '/node_modules/@arbitrum/nitro-contracts-1.2.1/out/yul/Reader4844.yul/Reader4844.json'
-      );
-    }
+    address challengeManager = address(new ChallengeManager());
 
     if (vm.envOr('DEPLOY_BOTH', false)) {
       // if true, also deploy the !IS_FEE_TOKEN_CHAIN action
       // only used to save gas cost when deploying both native and custom fee version
 
       // deploy sequencer inbox template
-      address seqInbox2 = _deployBytecodeWithConstructorFromJSON(
-        '/node_modules/@arbitrum/nitro-contracts-1.2.1/build/contracts/src/bridge/SequencerInbox.sol/SequencerInbox.json',
-        abi.encode(
+      address seqInbox2 = address(
+        new SequencerInbox(
           vm.envUint('MAX_DATA_SIZE'),
           reader4844Address,
           !vm.envBool('IS_FEE_TOKEN_CHAIN')
@@ -81,9 +61,8 @@ contract DeployCelestiaNitroContracts1Point2Point1UpgradeActionScript is
     }
 
     // deploy sequencer inbox template
-    address seqInbox = _deployBytecodeWithConstructorFromJSON(
-      '/node_modules/@arbitrum/nitro-contracts-1.2.1/build/contracts/src/bridge/SequencerInbox.sol/SequencerInbox.json',
-      abi.encode(
+    address seqInbox = address(
+      new SequencerInbox(
         vm.envUint('MAX_DATA_SIZE'),
         reader4844Address,
         vm.envBool('IS_FEE_TOKEN_CHAIN')
@@ -99,59 +78,5 @@ contract DeployCelestiaNitroContracts1Point2Point1UpgradeActionScript is
     });
 
     vm.stopBroadcast();
-  }
-
-  function _deployBytecode(bytes memory bytecode) internal returns (address) {
-    address addr;
-    assembly {
-      addr := create(0, add(bytecode, 0x20), mload(bytecode))
-    }
-    require(addr != address(0), 'bytecode deployment failed');
-    return addr;
-  }
-
-  function _deployBytecodeWithConstructor(
-    bytes memory bytecode,
-    bytes memory abiencodedargs
-  ) internal returns (address) {
-    bytes memory bytecodeWithConstructor = bytes.concat(
-      bytecode,
-      abiencodedargs
-    );
-    return _deployBytecode(bytecodeWithConstructor);
-  }
-
-  /**
-   * @notice Read bytecode from JSON file at path
-   */
-  function _getBytecode(
-    bytes memory path
-  ) internal view returns (bytes memory) {
-    string memory readerBytecodeFilePath = string(
-      abi.encodePacked(vm.projectRoot(), path)
-    );
-    string memory json = vm.readFile(readerBytecodeFilePath);
-    try vm.parseJsonBytes(json, '.bytecode.object') returns (
-      bytes memory bytecode
-    ) {
-      return bytecode;
-    } catch {
-      return vm.parseJsonBytes(json, '.bytecode');
-    }
-  }
-
-  function _deployBytecodeFromJSON(
-    bytes memory path
-  ) internal returns (address) {
-    bytes memory bytecode = _getBytecode(path);
-    return _deployBytecode(bytecode);
-  }
-
-  function _deployBytecodeWithConstructorFromJSON(
-    bytes memory path,
-    bytes memory abiencodedargs
-  ) internal returns (address) {
-    bytes memory bytecode = _getBytecode(path);
-    return _deployBytecodeWithConstructor(bytecode, abiencodedargs);
   }
 }
