@@ -67,14 +67,11 @@ contract CelestiaNitroContracts1Point2Point1UpgradeAction {
     TransparentUpgradeableProxy sequencerInbox = TransparentUpgradeableProxy(
       payable(address(rollup.sequencerInbox()))
     );
+
     (, uint256 futureBlocksBefore, , ) = ISequencerInbox(
       address(sequencerInbox)
     ).maxTimeVariation();
-    proxyAdmin.upgradeAndCall(
-      sequencerInbox,
-      newSequencerInboxImpl,
-      abi.encodeCall(ISeqInboxPostUpgradeInit.postUpgradeInit, ())
-    );
+    proxyAdmin.upgrade(sequencerInbox, newSequencerInboxImpl);
 
     // verify
     require(
@@ -93,11 +90,7 @@ contract CelestiaNitroContracts1Point2Point1UpgradeAction {
     TransparentUpgradeableProxy challengeManager = TransparentUpgradeableProxy(
       payable(address(rollup.challengeManager()))
     );
-    proxyAdmin.upgradeAndCall(
-      challengeManager,
-      newChallengeManagerImpl,
-      abi.encodeCall(IChallengeManagerUpgradeInit.postUpgradeInit, (newOsp))
-    );
+    proxyAdmin.upgrade(challengeManager, newChallengeManagerImpl);
 
     require(
       proxyAdmin.getProxyImplementation(challengeManager) ==

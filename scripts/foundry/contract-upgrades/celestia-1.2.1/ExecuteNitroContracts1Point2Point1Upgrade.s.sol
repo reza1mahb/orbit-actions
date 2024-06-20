@@ -2,7 +2,7 @@
 pragma solidity 0.8.16;
 
 import 'forge-std/Script.sol';
-import { CelestiaNitroContracts1Point2Point1UpgradeAction, ProxyAdmin } from '../../../../contracts/parent-chain/contract-upgrades/CelestiaNitroContracts1Point2Point1UpgradeAction.sol';
+import { CelestiaNitroContracts1Point2Point1UpgradeAction, ProxyAdmin } from '../../../../contracts/parent-chain/contract-upgrades/CelestiaNitroContracts.sol';
 import { IERC20Bridge } from '@arbitrum/nitro-contracts-1.2.1/src/bridge/IERC20Bridge.sol';
 import { IERC20Inbox } from '@arbitrum/nitro-contracts-1.2.1/src/bridge/IERC20Inbox.sol';
 import { ISequencerInbox } from '@arbitrum/nitro-contracts-1.2.1/src/bridge/ISequencerInbox.sol';
