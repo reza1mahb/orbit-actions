@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.16;
+pragma solidity ^0.8.16;
 
 import '@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
@@ -70,11 +70,7 @@ contract CelestiaNitroContracts1Point2Point1UpgradeAction {
     (, uint256 futureBlocksBefore, , ) = ISequencerInbox(
       address(sequencerInbox)
     ).maxTimeVariation();
-    proxyAdmin.upgradeAndCall(
-      sequencerInbox,
-      newSequencerInboxImpl,
-      abi.encodeCall(ISeqInboxPostUpgradeInit.postUpgradeInit, ())
-    );
+    proxyAdmin.upgrade(sequencerInbox, newSequencerInboxImpl);
 
     // verify
     require(
